@@ -3,3 +3,9 @@ sqlalchemy
 pymysql
 yfinance
 apscheduler
+Flask
+scikit-learn
+pandas
+numpy
+tensorflow
+matplotlib
