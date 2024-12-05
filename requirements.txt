@@ -9,3 +9,5 @@ pandas
 numpy
 tensorflow
 matplotlib
+torch
+seaborn

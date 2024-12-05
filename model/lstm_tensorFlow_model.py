@@ -8,20 +8,20 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM, Dropout
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score
+from data_preprocessor import read_database_data
 
-from sqlalchemy import create_engine
-
-# Set up the database connection
+# Get data from the database using the database connection
 DATABASE_URL = "sqlite:///data/stock_price_data.db"  # Replace with actual database URL
-engine = create_engine(DATABASE_URL)
+df_data = read_database_data(DATABASE_URL, "stock_prices")
 
-# Set the table name as stored by the data pipeline
-table_name = "stock_prices"
+# Convert the data to a time series format
+df = pd.DataFrame(df_data).set_index("Date")
 
-# Load data from the database into a DataFrame
-with engine.connect() as connection:
-    query = f"SELECT * FROM {table_name}"
-    df = pd.read_sql(query, con=connection)
+# Visualize the close price target data
+plt.plot(df.index, df["Close"], label="Time Series Data for Stock Price Close Selected as Target")
+plt.legend()
+plt.show()
 
 # Select the relevant features for prediction (e.g., 'Open', 'High', 'Low', 'Close', 'Volume')
 features = ['Open', 'High', 'Low', 'Close', 'Volume']
@@ -93,6 +93,5 @@ with open('results/stock_model.pkl', 'wb') as f:
     pickle.dump(model, f)
 
 #calculate the r2_score
-from sklearn.metrics import r2_score
 R2_Score_dtr = round(r2_score(predictions, y_test_scaled) * 100, 2)
 print("R2 Score for LSTM : ", R2_Score_dtr,"%")
