@@ -1,4 +1,5 @@
 spmlpenv/
 config.txt
 data-pipeline/_pycache_
-model/*/_pycache_
+model/._pycache_
+*.pyc
