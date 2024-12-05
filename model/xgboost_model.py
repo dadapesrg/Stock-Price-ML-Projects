@@ -58,6 +58,7 @@ print(f'The Error MSE: {mse:.2f}')
 r2 = r2_score(y_test, y_pred)
 print(f'MSE: {mse:.2f}, R2: {r2:.2f}')
 
+# Carry out hyperparameter tuning
 #Hyperparameters tuning 
 param_grid = {
     'max_depth': [3, 5, 7],
@@ -65,8 +66,8 @@ param_grid = {
     'n_estimators': [50, 100, 200]
 }
 
+# Perform grid search
 grid_search = GridSearchCV(xgb.XGBRegressor(), param_grid, cv=5, scoring='neg_mean_squared_error')
-#grid_search = GridSearchCV(estimator=model, param_grid=param_grid, scoring='accuracy', cv=5)
 
 grid_search.fit(X_train, y_train)
 
