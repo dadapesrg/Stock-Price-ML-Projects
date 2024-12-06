@@ -27,10 +27,10 @@ print(df.head())
 
 # Normalize the data
 scaler = MinMaxScaler(feature_range=(0, 1))
-df_scaled_data = scaler.fit_transform(df)
+scaled_data = scaler.fit_transform(df)
 
 # Convert back to DataFrame for easier manipulation
-df_scaled_data = pd.DataFrame(df_scaled_data, columns=df.columns, index=df.index)
+df_scaled_data = pd.DataFrame(scaled_data, columns=df.columns, index=df.index)
 
 # Seperate the dependant and independant variables
 X = df_scaled_data.drop('Close', axis=1)
@@ -82,6 +82,37 @@ best_model = grid_search.best_estimator_
 # Make predictions on the test set using the best model
 y_pred = best_model.predict(X_test)
 print('Final Prediction:  ', y_pred)
+
+# Inverse transform the predictions
+#y_pred_unscaled = scaler.inverse_transform(np.hstack((np.zeros((y_pred.shape[0], -1)), y_pred, np.zeros((y_pred.shape[0], 1)))))[:, -1]
+
+#y_test_unscaled = scaler.inverse_transform(np.hstack((np.zeros((y_test.shape[0], -1)), y_test.reshape(-1, 1), np.zeros((y_test.shape[0], 1)))))[:, -1]
+
+# Rescale predictions and true values back to original scale
+#y_test = scaler.inverse_transform(np.hstack([np.zeros((y_test.shape[0], df_scaled_data.shape[1] - 1)), np.reshape(y_test, (-1, 1))]))[:, -1]
+#y_pred = scaler.inverse_transform(np.hstack([np.zeros((y_pred.shape[0], df_scaled_data.shape[1] - 1)), np.reshape(y_pred, (-1, 1))]))[:, -1]
+
+#Function for inverse transform the predicted data
+def invert_transform(data, shape, column_index, scaler):
+    dummy_array = np.zeros((len(data), shape))    
+    dummy_array[:, column_index] = data    
+    return scaler.inverse_transform(dummy_array)[:, column_index]
+
+# Create a DataFrame to hold predictions and actual values
+test_pred_df = pd.DataFrame({
+    'Actual': invert_transform(y_test, scaled_data.shape[1], 0, scaler), # scaler.inverse_transform(y_test),  # Inverse scale the nat_demand
+    'Predicted': invert_transform(y_pred, scaled_data.shape[1], 0, scaler) #inversed_predictions #scaler.inverse_transform(np.concatenate([y_pred, np.zeros_like(y_pred)], axis=1))[:, 0]
+})
+
+# Plot the results
+plt.figure(figsize=(14,5))
+plt.plot(test_pred_df['Actual'], color='blue', label='Actual Stock Price')
+plt.plot(test_pred_df['Predicted'], color='red', label='Predicted Stock Price') #plt.plot(y_pred, color='red', label='Predicted Stock Price')
+plt.title('Stock Price Prediction')
+plt.xlabel('Time')
+plt.ylabel('Stock Price')
+plt.legend()
+plt.show()
 
 #calculate the r2_score
 R2_Score_dtr = round(r2_score(y_pred, y_test) * 100, 2)
