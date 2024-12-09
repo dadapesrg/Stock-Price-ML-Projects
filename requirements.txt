@@ -12,3 +12,4 @@ matplotlib
 torch
 seaborn
 xgboost
+graphviz
