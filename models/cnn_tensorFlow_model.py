@@ -15,6 +15,7 @@ from data_preprocessor import read_database_data
 
 # Get data from the database using the database connection
 DATABASE_URL = "sqlite:///data/stock_price_data.db"  # Replace with actual database URL
+
 df_data = read_database_data(DATABASE_URL, "stock_prices")
 
 # Convert the data to a time series format

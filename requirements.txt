@@ -13,3 +13,4 @@ torch
 seaborn
 xgboost
 graphviz
+psycopg2

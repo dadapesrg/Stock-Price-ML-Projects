@@ -1,13 +1,67 @@
+import yfinance as yf
+import pandas as pd
+from sqlalchemy import create_engine
+
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.schedulers.background import BackgroundScheduler
-from stock_data_transformed import clean_and_transform_data
-from web_extract_stock_data import get_stock_data
-from stock_data_storage import load_data_to_db
+#from stock_data_transformed import clean_and_transform_data
+#from web_extract_stock_data import get_stock_data
+#from stock_data_storage import load_data_to_db
 from datetime import datetime, timedelta
 
-DATABASE_URL = "sqlite:///data/stock_price_data.db"  # For SQLite
+# Set up the database connection
+#DATABASE_URL = "sqlite:///data/stock_price_data.db"  # For SQLite
+DATABASE_URL = "postgresql://postgres:Admin_2024@localhost:5434/mydb"  # For PostgreSQL
 
-# Scheduler function to run the pipeline
+# Fetch stock data from the web using yfinance
+def get_stock_data(ticker, start_date, end_date):
+    # Fetch historical data using yfinance
+    
+    stock_data = yf.download(ticker, start=start_date, end=end_date, interval='1d')
+
+    # Reset the index to include the Date column in the DataFrame
+    stock_data.reset_index(inplace=True)
+
+    # Select and rename columns to match the specified table headings   
+    stock_data = stock_data[['Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume']]
+    print("Before: ", stock_data)    
+    return stock_data
+
+# Clean and transform the data
+def clean_and_transform_data(data):
+    # Convert to a DataFrame
+    df = pd.DataFrame(data)
+
+    # Convert 'Date' to datetime
+    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+
+    # Change the column names
+    df.columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume']
+    
+    # Remove rows with missing data
+    df = df.dropna()
+    df.to_csv('data/stock_data.csv', index=False)
+       
+    # Convert columns to appropriate types
+    df['Open'] = pd.to_numeric(df['Open'], errors='coerce')
+    df['High'] = pd.to_numeric(df['High'], errors='coerce')
+    df['Low'] = pd.to_numeric(df['Low'], errors='coerce')
+    df['Close'] = pd.to_numeric(df['Close'], errors='coerce')
+    df['Adj Close'] = pd.to_numeric(df['Adj Close'], errors='coerce')
+    df['Volume'] = pd.to_numeric(df['Volume'].astype(str).str.replace(',', ''), errors='coerce')
+    print("After:::", df)
+    return df
+
+# Function to load data into the database
+def load_data_to_db(df, database_url):
+    # SQLAlchemy Engine Setup      
+        
+    engine = create_engine(database_url)
+    
+    # Insert data into the table
+    df.to_sql('stock_prices', con=engine, if_exists="replace", index=False)
+
+# Scheduler function to run the data pipeline
 def run_pipeline():    
     # Define the stock ticker and period
     ticker = 'AAPL'  # Replace with the desired stock symbol
