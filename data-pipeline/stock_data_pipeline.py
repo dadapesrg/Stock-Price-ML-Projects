@@ -1,17 +1,12 @@
 import yfinance as yf
 import pandas as pd
 from sqlalchemy import create_engine
-
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.schedulers.background import BackgroundScheduler
-#from stock_data_transformed import clean_and_transform_data
-#from web_extract_stock_data import get_stock_data
-#from stock_data_storage import load_data_to_db
 from datetime import datetime, timedelta
 
 # Set up the database connection
-#DATABASE_URL = "sqlite:///data/stock_price_data.db"  # For SQLite
-DATABASE_URL = "postgresql://postgres:Admin_2024@localhost:5434/mydb"  # For PostgreSQL
+DATABASE_URL = "sqlite:///data/stock_price_data.db"  # For SQLite
 
 # Fetch stock data from the web using yfinance
 def get_stock_data(ticker, start_date, end_date):
