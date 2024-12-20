@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 import graphviz
 from sklearn.tree import export_graphviz
 import matplotlib.pyplot as plt
-from data_preprocessor import read_database_data
+from .data_preprocessor import read_database_data
 
 # Get data from the database using the database connection
 DATABASE_URL = "sqlite:///data/stock_price_data.db"  # Replace with actual database URL

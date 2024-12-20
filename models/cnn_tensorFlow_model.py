@@ -11,7 +11,7 @@ from keras.layers import Conv1D, MaxPooling1D
 import keras.optimizers
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
-from data_preprocessor import read_database_data
+from .data_preprocessor import read_database_data
 
 # Get data from the database using the database connection
 DATABASE_URL = "sqlite:///data/stock_price_data.db"  # Replace with actual database URL

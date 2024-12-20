@@ -6,7 +6,7 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 from sklearn.metrics import r2_score
-from data_preprocessor import read_database_data, create_sequences
+from .data_preprocessor import read_database_data, create_sequences
 
 # Get data from the database using the database connection
 DATABASE_URL = "sqlite:///data/stock_price_data.db"  # Replace with actual database URL
