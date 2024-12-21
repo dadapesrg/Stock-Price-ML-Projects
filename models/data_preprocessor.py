@@ -70,7 +70,8 @@ def check_missing_data(df):
             dealing_missing_data(df)
         else:
             print("No missing values detected!")
-            
+
+# Function to deal with missing data          
 def dealing_missing_data(df):
     values = 100*(round(df.isnull().sum()/df.count(),2))
     to_delete = []
@@ -87,6 +88,7 @@ def dealing_missing_data(df):
     print(f"\nThe missing values in {to_impute} have been replaced by the median.")
     print(f"The columns {to_check} should be further understood")
     
+# Function to check data types
 def check_data_types(df, expected_types):
     """
     Check the data types of a DataFrame against expected types.
@@ -180,6 +182,7 @@ def remove_outliers(data, column_name, outliers):
     plt.tight_layout()
     plt.show()
 
+# Function to cap outliers
 def cap_outliers(data, lower_percentile=5, upper_percentile=95):
     lower_limit = np.percentile(data, lower_percentile)
     upper_limit = np.percentile(data, upper_percentile)
