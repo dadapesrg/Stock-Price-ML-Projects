@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 import graphviz
 from sklearn.tree import export_graphviz
 import matplotlib.pyplot as plt
-from .data_preprocessor import read_database_data
+from  .data_preprocessor import read_database_data
 
 # Get data from the database using the database connection
 DATABASE_URL = "sqlite:///data/stock_price_data.db"  # Replace with actual database URL
@@ -42,13 +42,21 @@ y = df_scaled_data['Close']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Create Random Forest model
-rf = RandomForestRegressor(n_estimators=40, random_state=42)
+def train_model(X_train, y_train):
+    rf = RandomForestRegressor(n_estimators=40, random_state=42)
+    rf.fit(X_train, y_train)
+    return rf
+
+rf = train_model(X_train, y_train) # RandomForestRegressor(n_estimators=40, random_state=42)
 
 # Train model
 rf.fit(X_train, y_train)
 
 # Make predictions
-y_pred = rf.predict(X_test)
+def make_predictions(model, X_test):
+    return model.predict(X_test)   
+ 
+y_pred = make_predictions(rf, X_test) #rf.predict(X_test)
 
 # Evaluate model
 mse = mean_squared_error(y_test, y_pred)

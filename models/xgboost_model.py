@@ -83,15 +83,6 @@ best_model = grid_search.best_estimator_
 y_pred = best_model.predict(X_test)
 print('Final Prediction:  ', y_pred)
 
-# Inverse transform the predictions
-#y_pred_unscaled = scaler.inverse_transform(np.hstack((np.zeros((y_pred.shape[0], -1)), y_pred, np.zeros((y_pred.shape[0], 1)))))[:, -1]
-
-#y_test_unscaled = scaler.inverse_transform(np.hstack((np.zeros((y_test.shape[0], -1)), y_test.reshape(-1, 1), np.zeros((y_test.shape[0], 1)))))[:, -1]
-
-# Rescale predictions and true values back to original scale
-#y_test = scaler.inverse_transform(np.hstack([np.zeros((y_test.shape[0], df_scaled_data.shape[1] - 1)), np.reshape(y_test, (-1, 1))]))[:, -1]
-#y_pred = scaler.inverse_transform(np.hstack([np.zeros((y_pred.shape[0], df_scaled_data.shape[1] - 1)), np.reshape(y_pred, (-1, 1))]))[:, -1]
-
 #Function for inverse transform the predicted data
 def invert_transform(data, shape, column_index, scaler):
     dummy_array = np.zeros((len(data), shape))    

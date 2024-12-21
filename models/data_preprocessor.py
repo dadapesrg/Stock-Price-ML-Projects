@@ -6,7 +6,6 @@ import seaborn as sns
 
 from sqlalchemy import create_engine
 
-
 # function to reshape array
 def prepare_dataset(data, steps, output_steps):
     X, y = [], []
