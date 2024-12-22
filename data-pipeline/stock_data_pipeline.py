@@ -1,5 +1,6 @@
 import yfinance as yf
 import pandas as pd
+import numpy as np
 from sqlalchemy import create_engine
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -35,6 +36,11 @@ def clean_and_transform_data(data):
     
     # Remove rows with missing data
     df = df.dropna()
+
+    # Standard deviation statistical summary
+    print(np.std(df))
+
+    # Save the data to a CSV file
     df.to_csv('data/stock_data.csv', index=False)
        
     # Convert columns to appropriate types

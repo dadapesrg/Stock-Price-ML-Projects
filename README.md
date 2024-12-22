@@ -10,4 +10,4 @@ The stock price prediction project aims to develop different machine learning mo
 
 3. Data: Location of the SQLite database where the stock data is stored.
 4. Results: Location of stored trained models for prediction.
-5. Tests: Location for the test cases for the project
+5. Tests: Location for the test cases for the project.
