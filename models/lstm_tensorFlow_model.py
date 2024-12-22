@@ -9,11 +9,17 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM, Dropout
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
-from data_preprocessor import read_database_data
+from data_preprocessor import read_database_data, check_missing_data
 
 # Get data from the database using the database connection
 DATABASE_URL = "sqlite:///data/stock_price_data.db"  # Replace with actual database URL
 df_data = read_database_data(DATABASE_URL, "stock_prices")
+
+# Check for missing data
+check_missing_data(df_data)
+
+# Display the data statistics
+df_data.describe()
 
 # Convert the data to a time series format
 df = pd.DataFrame(df_data).set_index("Date")
