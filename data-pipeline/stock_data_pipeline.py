@@ -49,8 +49,7 @@ def clean_and_transform_data(data):
 
 # Function to load data into the database
 def load_data_to_db(df, database_url):
-    # SQLAlchemy Engine Setup      
-        
+    # SQLAlchemy Engine Setup            
     engine = create_engine(database_url)
     
     # Insert data into the table
