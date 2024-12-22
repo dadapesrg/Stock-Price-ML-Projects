@@ -4,12 +4,13 @@ os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM, Dropout
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
-from data_preprocessor import read_database_data, check_missing_data
+from data_preprocessor import read_database_data, check_missing_data, visualize_correlation_matrix
 
 # Get data from the database using the database connection
 DATABASE_URL = "sqlite:///data/stock_price_data.db"  # Replace with actual database URL
@@ -23,6 +24,9 @@ df_data.describe()
 
 # Convert the data to a time series format
 df = pd.DataFrame(df_data).set_index("Date")
+
+# Visualize the correlation matrix using a heatmap
+visualize_correlation_matrix(df)
 
 # Visualize the close price target data
 plt.plot(df.index, df["Close"], label="Time Series Data for Stock Price Close Selected as Target")

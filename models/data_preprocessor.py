@@ -188,3 +188,13 @@ def cap_outliers(data, lower_percentile=5, upper_percentile=95):
     upper_limit = np.percentile(data, upper_percentile)
     return np.clip(data, lower_limit, upper_limit)
 
+# Function to visualize the correlation matrix using a heatmap
+def visualize_correlation_matrix(df):
+    correlation = df.corr()
+    sns.heatmap(
+        correlation,
+        vmin=-1, vmax=1, center=0,
+        cmap=sns.diverging_palette(50, 500, n=500),
+        square=True
+    )
+    plt.show()  
