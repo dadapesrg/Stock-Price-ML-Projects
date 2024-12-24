@@ -6,7 +6,7 @@ import seaborn as sns
 
 from sqlalchemy import create_engine
 
-# function to reshape array
+# Function to reshape array
 def prepare_dataset(data, steps, output_steps):
     X, y = [], []
     for i in range(len(data) - steps - output_steps):
@@ -17,8 +17,7 @@ def prepare_dataset(data, steps, output_steps):
 
 # Define a function to create sequences of data
 def create_sequences(data, seq_length, target_col_index):
-    X = []
-    y = []
+    X, y = [], []    
     for i in range(seq_length, len(data)):
         X.append(data[i-seq_length:i])
         y.append(data[i, target_col_index])  # 'the target column' is the target

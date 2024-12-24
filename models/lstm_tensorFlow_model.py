@@ -10,7 +10,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM, Dropout
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
-from data_preprocessor import read_database_data, check_missing_data, visualize_correlation_matrix
+from data_preprocessor import read_database_data, create_sequences, check_missing_data, visualize_correlation_matrix
 
 # Get data from the database using the database connection
 DATABASE_URL = "sqlite:///data/stock_price_data.db"  # Replace with actual database URL
@@ -41,20 +41,12 @@ data = df[features].values
 scaler = MinMaxScaler(feature_range=(0, 1))
 scaled_data = scaler.fit_transform(data)
 
-# Define a function to create sequences of data
-def create_sequences(data, seq_length):
-    X = []
-    y = []
-    for i in range(seq_length, len(data)):
-        X.append(data[i-seq_length:i])
-        y.append(data[i, 3])  # 'close' price is the target
-    return np.array(X), np.array(y)
-
 # Define the sequence length
 seq_length = 60
 
 # Create sequences
-X, y = create_sequences(scaled_data, seq_length)
+table_column_index = 3  # Index of the 'close' price column as the target
+X, y = create_sequences(scaled_data, seq_length, table_column_index)
 
 # Split the data into training and test sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
