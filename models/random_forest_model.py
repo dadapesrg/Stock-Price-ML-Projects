@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 import graphviz
 from sklearn.tree import export_graphviz
 import matplotlib.pyplot as plt
-from  .data_preprocessor import read_database_data
+from  data_preprocessor import read_database_data
 
 # Get data from the database using the database connection
 DATABASE_URL = "sqlite:///data/stock_price_data.db"  # Replace with actual database URL
@@ -121,4 +121,4 @@ def visualise_tree(rf, features):
 
 #calculate the r2_score
 R2_Score_dtr = round(r2_score(y_pred, y_test) * 100, 2)
-print("R2 Score for XGBoost Model : ", R2_Score_dtr,"%")
+print("R2 Score for Random Forest Model : ", R2_Score_dtr,"%")

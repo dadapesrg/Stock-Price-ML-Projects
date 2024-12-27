@@ -3,6 +3,7 @@ import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import numpy as np
 import pandas as pd
+import torch
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 
@@ -61,7 +62,7 @@ X_train_ml, X_test_ml, y_train_ml, y_test_ml = train_test_split(X_ml, y_ml, test
 # Split the data into training and test sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-def build_train_cnn_model(X_train, y_train, epochs=150, batch=24, lr=0.0003):
+def build_train_cnn_model(X_train, y_train, epochs=100, batch=24, lr=0.0003):
     # Define the CNN model    
     adam = keras.optimizers.Adam(lr)
     model = Sequential()
@@ -71,6 +72,7 @@ def build_train_cnn_model(X_train, y_train, epochs=150, batch=24, lr=0.0003):
     model.add(Dense(50, activation='relu'))
     model.add(Dense(1))
     model.compile(loss='mse', optimizer=adam)
+    #model.compile(optimizer='adam', loss='mean_squared_error')
 
     # Model summary
     model.summary()   
@@ -81,7 +83,7 @@ def build_train_cnn_model(X_train, y_train, epochs=150, batch=24, lr=0.0003):
     return model
 
 # Build and train the lstm model
-def build_train_lstm_model(X_train, y_train, epochs=100, batch=8):
+def build_train_lstm_model(X_train, y_train, epochs=100, batch=24):
     # Initialize the model
     model = Sequential()
 
@@ -104,8 +106,7 @@ def build_train_lstm_model(X_train, y_train, epochs=100, batch=8):
 
     return model
 
-def build_train_lstm_pytorch_model(X_train, y_train, epochs=50):
-    import torch
+def build_train_lstm_pytorch_model(X_train, y_train, epochs=100):    
     import torch.nn as nn
     import torch.optim as optim
 
@@ -149,11 +150,17 @@ def build_train_lstm_pytorch_model(X_train, y_train, epochs=50):
     return model
 
 # Build and train the random forest model
-def build_train_random_forest_model(X_train, y_train, n_estimators=40, random_state=42):
+def build_train_random_forest_model(X_train, y_train, n_estimators=100, min_samples_split=2, max_depth=15):
     from sklearn.ensemble import RandomForestRegressor    
-    rf = RandomForestRegressor(n_estimators=n_estimators, random_state=random_state)
+    rf = RandomForestRegressor(n_estimators=n_estimators, min_samples_split=min_samples_split, max_depth=max_depth)
     rf.fit(X_train, y_train)
     return rf
+
+def build_train_decision_tree_model(X_train_ml, y_train_ml, max_depth=15):
+    from sklearn.tree import DecisionTreeRegressor
+    dt = DecisionTreeRegressor(max_depth=max_depth)
+    dt.fit(X_train_ml, y_train_ml)
+    return dt
 
 # Build and train the xgboost model
 def build_train_xgboost_model(X_train, y_train, n_estimators=100, max_depth=7, learning_rate=0.1):
@@ -165,28 +172,45 @@ def build_train_xgboost_model(X_train, y_train, n_estimators=100, max_depth=7, l
 def make_predictions(model, X_test):
     return model.predict(X_test)    
 
+def invert_transform(data, shape, column_index, scaler):
+    dummy_array = np.zeros((len(data), shape))    
+    dummy_array[:, column_index] = data    
+    return scaler.inverse_transform(dummy_array)[:, column_index]
+
+#y_test_torch = torch.FloatTensor(y_test)
+y_test = scaler.inverse_transform(np.hstack((np.zeros((y_test.shape[0], table_column_index)), y_test.reshape(-1, 1), np.zeros((y_test.shape[0], 1)))))[:, table_column_index]
+#y_test_torch = scaler.inverse_transform(np.hstack([np.zeros((y_test_torch.shape[0], scaled_data.shape[1] - 1)), y_test_torch.numpy().reshape(-1, 1)]))[:, -1]
+
+y_test_ml = invert_transform(y_test_ml, len(df.columns), table_column_index, scaler)
+
 models = {
     'LSTM': build_train_lstm_model(X_train, y_train),
     'CNN': build_train_cnn_model(X_train, y_train),
-    'PTLSTM': build_train_lstm_pytorch_model(X_train, y_train),
+   # 'PTLSTM': build_train_lstm_pytorch_model(X_train, y_train),
     'RF': build_train_random_forest_model(X_train_ml, y_train_ml),    
-    'XGB': build_train_xgboost_model(X_train_ml, y_train_ml) 
+    'XGB': build_train_xgboost_model(X_train_ml, y_train_ml), 
+    'DT': build_train_decision_tree_model(X_train_ml, y_train_ml)
 }
 
+import torch
 rmse_scores = dict()
+predictions = dict()
 for name, model in models.items():
-    if name == 'PTLSTM':
-        import torch
+    if name == 'PTLSTM':        
         model.eval()
         with torch.no_grad():
             X_test = torch.FloatTensor(X_test)
             y_pred = model(X_test).squeeze()  
+            #y_pred = scaler.inverse_transform(np.hstack([np.zeros((y_pred.shape[0], scaled_data.shape[1] - 1)), y_pred.numpy().reshape(-1, 1)]))[:, -1]
+            predictions[name] = y_pred
             rmse = np.sqrt(mean_squared_error(y_test, y_pred)) 
             rmse = float("{:.4f}".format(rmse))
             rmse_scores[name] = rmse
             print(f"{name} RMSE: {rmse}")            
-    elif name == 'RF' or name == 'XGB':
+    elif name == 'RF' or name == 'XGB' or name == 'DT':
         y_pred = model.predict(X_test_ml)
+        y_pred = invert_transform(y_pred, len(df.columns), table_column_index, scaler)
+        predictions[name] = y_pred
         rmse = np.sqrt(mean_squared_error(y_test_ml, y_pred))
         rmse = float("{:.4f}".format(rmse))
         rmse_scores[name] = rmse
@@ -194,6 +218,8 @@ for name, model in models.items():
     else:        
         model.fit(X_train, y_train)
         y_pred = model.predict(X_test)
+        y_pred = scaler.inverse_transform(np.hstack((np.zeros((y_pred.shape[0], 3)), y_pred, np.zeros((y_pred.shape[0], 1)))))[:, 3]
+        predictions[name] = y_pred
         rmse = np.sqrt(mean_squared_error(y_test, y_pred))
         rmse = float("{:.4f}".format(rmse))
         rmse_scores[name] = rmse
@@ -209,4 +235,51 @@ add_plot_labels(list(rmse_scores.keys()), list(rmse_scores.values()))
 plt.xlabel('') 
 plt.ylabel('RMSE') 
 plt.title('Models') 
+plt.show()
+
+fig, axes = plt.subplots(2, 3, sharex=True, sharey=True,figsize=(22,12))
+ax5, ax6, ax7 = axes[0]
+ax8, ax9, ax10 = axes[1]
+
+def add_plot(x,y):
+    for i in range(len(x)):
+        if x[i] == 'RF':
+            ax5.plot(y[i], label=x[i])
+        elif x[i] == 'XGB':
+            ax6.plot(y[i], label=x[i])
+        elif x[i] == 'LSTM':
+            ax7.plot(y[i], label=x[i])
+        elif x[i] == 'CNN':
+            ax8.plot(y[i], label=x[i])
+        elif x[i] == 'PTLSTM':
+            ax9.plot(y[i], label=x[i])
+        else:
+            ax10.plot(y[i], label=x[i])
+
+    ax5.plot(y_test_ml, label='Actual Stock Price')
+    ax6.plot(y_test_ml, label='Actual Stock Price')
+    ax7.plot(y_test, label='Actual Stock Price')   
+    ax8.plot(y_test, label='Actual Stock Price')      
+    ax9.plot(y_test, label='Actual Stock Price')
+    ax10.plot(y_test_ml, label='Actual Stock Price')
+    
+    ax5.legend(loc='best')
+    ax6.legend(loc='best')
+    ax7.legend(loc='best')
+    ax8.legend(loc='best')
+    ax9.legend(loc='best')
+    ax10.legend(loc='best')
+
+    ax5.set_title('Random Forest Predictions')
+    ax6.set_title('XGBoost Predictions')
+    ax7.set_title('LSTM Predictions')
+    ax8.set_title('CNN Predictions')
+    ax9.set_title('PTLSTM Predictions')
+    ax10.set_title('Decision Tree Predictions')
+    ax5.set_xlabel('Time')
+    ax5.set_ylabel('Stock Price')
+
+add_plot(list(predictions.keys()), list(predictions.values()))  
+
+plt.tight_layout()
 plt.show()
