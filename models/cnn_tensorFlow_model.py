@@ -73,7 +73,7 @@ cnn_history = model_cnn.fit(X_train, y_train, epochs=epochs, batch_size=batch, v
 cnn_y_pred = model_cnn.predict(X_test)
 
 # Since we scaled all features but predicting only one, we'll
-# need to inverse transform the predictions using the appropriate feature column.
+# Need to inverse transform the predictions using the appropriate feature column.
 def invert_transform(data, shape, column_index, scaler):
     dummy_array = np.zeros((len(data), shape))
     dummy_array[:, column_index] = data.flatten()
@@ -100,7 +100,7 @@ plt.show()
 import pickle
 #Save the model to a file
 with open('results/cnn_stock_model.pkl', 'wb') as f:
-    pickle.dump(model, f)
+    pickle.dump(model_cnn, f)
 
 #calculate the r2_score
 #calculate the r2_score

@@ -197,3 +197,8 @@ def visualize_correlation_matrix(df):
         square=True
     )
     plt.show()  
+
+def invert_transform(data, shape, column_index, scaler):
+    dummy_array = np.zeros((len(data), shape))    
+    dummy_array[:, column_index] = data    
+    return scaler.inverse_transform(dummy_array)[:, column_index]
