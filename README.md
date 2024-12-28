@@ -4,7 +4,7 @@ The stock price prediction project aims to develop different machine learning mo
 2. Models: Modules for buiding the models. Contains the data preprocessing module and the model building modules. The models consist of the followings:\
     a. Long Short-Term Memory (LSTM) model using tensorFlow\
     b. Long Short-Term Memory (LSTM) model using PyTorch \
-    c. Gradient Boost model with hyperparameters tuning \
+    c. Extreme Gradient Boost model with hyperparameters tuning \
     d. Convolution Neural Network (CNN) model \
     e. Random Forest model
 
