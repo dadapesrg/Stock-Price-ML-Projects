@@ -38,26 +38,14 @@ data = df[features].values
 
 # Normalize the data
 scaler = MinMaxScaler(feature_range=(0, 1))
-scaled_data_torch = scaler.fit_transform(data)
+scaled_data = scaler.fit_transform(data)
 
 # Define the sequence length
 seq_length = 60
 
 # Create sequences
 table_column_index = 3  # Index of the 'close' price column as the target
-X, y = create_sequences(scaled_data_torch, seq_length, table_column_index)
-
-#Prepare data for random forest and gradient boost models
-# Drop features not used for prediction
-df = df.drop('Adj Close', axis=1)
-scaled_data = scaler.fit_transform(df)
-# Convert to DataFrame for easier manipulation
-df_scaled_data = pd.DataFrame(scaled_data, columns=df.columns, index=df.index)
-# Seperate the dependant and independant variables
-X_ml = df_scaled_data.drop('Close', axis=1)
-y_ml = df_scaled_data['Close']
-# Split the data into training and test sets
-X_train_ml, X_test_ml, y_train_ml, y_test_ml = train_test_split(X_ml, y_ml, test_size=0.2, random_state=42)
+X, y = create_sequences(scaled_data, seq_length, table_column_index)
 
 # Split the data into training and test sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -149,44 +137,15 @@ def build_train_lstm_pytorch_model(X_train, y_train, epochs=100):
 
     return model
 
-# Build and train the random forest model
-def build_train_random_forest_model(X_train, y_train, n_estimators=100, min_samples_split=2, max_depth=15):
-    from sklearn.ensemble import RandomForestRegressor    
-    rf = RandomForestRegressor(n_estimators=n_estimators, min_samples_split=min_samples_split, max_depth=max_depth)
-    rf.fit(X_train, y_train)
-    return rf
-
-def build_train_decision_tree_model(X_train_ml, y_train_ml, max_depth=15):
-    from sklearn.tree import DecisionTreeRegressor
-    dt = DecisionTreeRegressor(max_depth=max_depth)
-    dt.fit(X_train_ml, y_train_ml)
-    return dt
-
-def build_train_gradient_boosting_model(X_train_ml, y_train_ml, rando_state=42):
-    from sklearn.ensemble import GradientBoostingRegressor
-    gb = GradientBoostingRegressor(random_state=rando_state)
-    gb.fit(X_train_ml, y_train_ml)
-    return gb
-
-# Build and train the xgboost model
-def build_train_xgboost_model(X_train, y_train, n_estimators=100, max_depth=7, learning_rate=0.1):
-    import xgboost as xgb
-    params = {'objective': 'reg:squarederror', 'max_depth': max_depth, 'learning_rate': learning_rate, 'n_estimators': n_estimators}
-    model = xgb.XGBRegressor(**params)
-    model.fit(X_train, y_train)
-    return model
-
-y_test = invert_transform(y_test, len(df.columns), table_column_index, scaler)
-y_test_ml = invert_transform(y_test_ml, len(df.columns), table_column_index, scaler)
+def invert_transform(data, shape, column_index, scaler):
+    dummy_array = np.zeros((len(data), shape))
+    dummy_array[:, column_index] = data.flatten()
+    return scaler.inverse_transform(dummy_array)[:, column_index]
 
 models = {
-   # 'LSTM': build_train_lstm_model(X_train, y_train),
-   # 'CNN': build_train_cnn_model(X_train, y_train),
-  #  'PTLSTM': build_train_lstm_pytorch_model(X_train, y_train),
-    'RF': build_train_random_forest_model(X_train_ml, y_train_ml), 
-    "GB": build_train_gradient_boosting_model(X_train_ml, y_train_ml), 
-    'XGB': build_train_xgboost_model(X_train_ml, y_train_ml), 
-    'DT': build_train_decision_tree_model(X_train_ml, y_train_ml)
+    'LSTM': build_train_lstm_model(X_train, y_train),
+    'CNN': build_train_cnn_model(X_train, y_train),
+  #  'PTLSTM': build_train_lstm_pytorch_model(X_train, y_train),    
 }
 
 import torch
@@ -197,93 +156,70 @@ for name, model in models.items():
         model.eval()
         X_test = torch.FloatTensor(X_test)
         with torch.no_grad():            
-            y_pred = model(X_test).squeeze()        
-        y_pred = invert_transform(y_pred, len(df.columns), table_column_index, scaler)        
-        predictions[name] = y_pred
-        rmse = np.sqrt(mean_squared_error(y_test, y_pred)) 
+            y_pred = model(X_test).squeeze()   
+        rmse = np.sqrt(mean_squared_error(y_test, y_pred))       
+        predictions[name] = y_pred       
         rmse = float("{:.4f}".format(rmse))
         rmse_scores[name] = rmse
-        print(f"{name} RMSE: {rmse}")            
-    elif name == 'RF' or name == 'XGB' or name == 'DT' or name == 'GB':
-        y_pred = model.predict(X_test_ml)
-        y_pred = invert_transform(y_pred, len(df.columns), table_column_index, scaler)
-        predictions[name] = y_pred
-        rmse = np.sqrt(mean_squared_error(y_test_ml, y_pred))
-        rmse = float("{:.4f}".format(rmse))
-        rmse_scores[name] = rmse
-        print(f"{name} RMSE: {rmse}")
+        print(f"{name} RMSE: {rmse}") 
     else:        
         model.fit(X_train, y_train)
         y_pred = model.predict(X_test)
-        y_pred = scaler.inverse_transform(np.hstack((np.zeros((y_pred.shape[0], 3)), y_pred, np.zeros((y_pred.shape[0], 1)))))[:, 3]
-        predictions[name] = y_pred
-        rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+        rmse = np.sqrt(mean_squared_error(y_test, y_pred))           
+        predictions[name] = y_pred        
         rmse = float("{:.4f}".format(rmse))
         rmse_scores[name] = rmse
         print(f"{name} RMSE: {rmse}")
 
-def add_plot_labels(x,y):
+ # Plot the RMSE scores       
+def add_comparison_plots(x,y):
     for i in range(len(x)):
         plt.text(i, y[i], y[i], ha = 'center')
 
 plt.bar(list(rmse_scores.keys()), list(rmse_scores.values()), color ='red')
 
-add_plot_labels(list(rmse_scores.keys()), list(rmse_scores.values()))
+# Add labels
+add_comparison_plots(list(rmse_scores.keys()), list(rmse_scores.values()))
 plt.xlabel('') 
 plt.ylabel('RMSE') 
 plt.title('Models') 
 plt.show()
 
-fig, axes = plt.subplots(4, 2, sharex=True, sharey=True,figsize=(22,12))
-ax5, ax6 = axes[0]
-ax7, ax8 = axes[1]
-ax9, ax10 = axes[2]
-ax11 = axes[3]
+fig, axes = plt.subplots(2, 2, sharex=True, sharey=True,figsize=(22,12))
+fig.suptitle('Stock Price Predictions')
+fig.supxlabel('Time')
+fig.supylabel('Stock Price')
+ax1, ax2 = axes[0]
+ax3, ax4 = axes[1]
 
-def add_plot(x,y):
-    for i in range(len(x)):
-        if x[i] == 'RF':
-            ax5.plot(y[i], label=x[i])
-        elif x[i] == 'XGB':
-            ax6.plot(y[i], label=x[i])
-        elif x[i] == 'LSTM':
-            ax7.plot(y[i], label=x[i])
+y_test = invert_transform(y_test, X_train.shape[2], 0, scaler)
+
+# Compare the predictions wtih the actual stock price
+def add_plots(x,y):
+    for i in range(len(x)):            
+        if x[i] == 'LSTM':
+            y[i] = invert_transform(y[i], X_train.shape[2], 0, scaler)               
+            ax1.plot(y[i], label=x[i])                       
         elif x[i] == 'CNN':
-            ax8.plot(y[i], label=x[i])
-        elif x[i] == 'PTLSTM':
-            ax9.plot(y[i], label=x[i])
-        elif x[i] == 'GB':
-            ax10.plot(y[i], label=x[i])
-        else:
-            ax11.plot(y[i], label=x[i])
-
-    ax5.plot(y_test_ml, label='Actual Stock Price')
-    ax6.plot(y_test_ml, label='Actual Stock Price')
-    ax7.plot(y_test, label='Actual Stock Price')   
-    ax8.plot(y_test, label='Actual Stock Price')      
-    ax9.plot(y_test, label='Actual Stock Price')
-    ax10.plot(y_test_ml, label='Actual Stock Price')
-    ax11.plot(y_test_ml, label='Actual Stock Price')
+           y[i] = invert_transform(y[i], X_train.shape[2], 0, scaler)
+           ax2.plot(y[i], label=x[i])                                
+        else:   
+            y[i] = scaler.inverse_transform(np.hstack([np.zeros((y[i].shape[0], scaled_data.shape[1] - 1)), y[i].numpy().reshape(-1, 1)]))[:, -1]
+            ax3.plot(y[i], label=x[i]) 
+              
+    ax1.plot(y_test, label='Actual Stock Price')
+    ax2.plot(y_test, label='Actual Stock Price')
+    ax3.plot(y_test, label='Actual Stock Price')   
     
-    ax5.legend(loc='best')
-    ax6.legend(loc='best')
-    ax7.legend(loc='best')
-    ax8.legend(loc='best')
-    ax9.legend(loc='best')
-    ax10.legend(loc='best')
-    ax11.legend(loc='best')
+    ax1.legend(loc='best')
+    ax2.legend(loc='best')
+    ax3.legend(loc='best')   
+   
+    ax1.set_title('LSTM Predictions')
+    ax2.set_title('CNN Predictions')
+    ax3.set_title('PTLSTM Predictions')   
 
-    ax5.set_title('Random Forest Predictions')
-    ax6.set_title('XGBoost Predictions')
-    ax7.set_title('LSTM Predictions')
-    ax8.set_title('CNN Predictions')
-    ax9.set_title('PTLSTM Predictions')
-    ax10.set_title('Gradient Boosting Predictions')
-    ax11.set_title('Decision Tree Predictions')
-    ax9.set_xlabel('Time')
-    ax5.set_ylabel('Stock Price')
-
-add_plot(list(predictions.keys()), list(predictions.values()))  
+add_plots(list(predictions.keys()), list(predictions.values()))  
 
 plt.tight_layout()
 plt.show()
