@@ -100,25 +100,44 @@ models = {
     'LR': build_train_linear_regression_model(X_train, y_train) # Linear Regression
 }
 
+# Evaluate the models
 rmse_scores = dict()
 predictions = dict()
 results = {}
 for name, model in models.items():
+        train_r2 = model.score(X_train, y_train)
         y_pred = model.predict(X_test)                
         predictions[name] = y_pred
-
         # calculating evaluation metrics
-        rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+        r2 = r2_score(y_test, y_pred)
+        mse = mean_squared_error(y_test, y_pred)
+        rmse = np.sqrt(mse)
         rmse = float("{:.4f}".format(rmse))
         rmse_scores[name] = rmse           
         mae = mean_absolute_error(y_test, y_pred)
-        r2 = r2_score(y_test, y_pred)
+       
+        # store the metrics    
+        results[name] = {"Training R²": train_r2, " Testing R²": r2, "MSE": mse, "RMSE": rmse, "MAE": mae}     
 
-        # store the metrics
-        results[name] = {"MAE": mae, "R²": r2,  "RMSE": rmse}     
+# Print the results
+print("Summary of Models' Metrics")
+results_df = pd.DataFrame(results)  # convert the results to a DataFrame for better readability
+results_df_transposed = results_df.T # Transpose the DataFrame
+print(results_df_transposed)
 
-results_df = pd.DataFrame(results).T  # convert the results to a DataFrame for better readability
-print(results_df)
+# Visualize the model metrics
+def visualize_model_metrics(df, title="Model Evalation", xlabel="X-axis", ylabel="Y-axis"):
+    df.plot(kind='bar', figsize=(10, 6))
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.xticks(rotation=45)
+    plt.legend(loc='best')
+    plt.tight_layout()
+    plt.show()
+
+# Visualize the model metrics
+visualize_model_metrics(results_df, title="Models' Metrics Comparison", xlabel="Evaluation Metrics", ylabel="Value")
 
 # Visualize the RMSE scores
 def add_plot_labels(x,y):
@@ -126,7 +145,6 @@ def add_plot_labels(x,y):
         plt.text(i, y[i], y[i], ha = 'center')
 
 plt.bar(list(rmse_scores.keys()), list(rmse_scores.values()), color ='red')
-
 add_plot_labels(list(rmse_scores.keys()), list(rmse_scores.values()))
 plt.xlabel('') 
 plt.ylabel('RMSE') 
