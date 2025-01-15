@@ -108,3 +108,7 @@ plt.show()
 #calculate the r2_score
 R2_Score_dtr = round(r2_score(y_pred, y_test) * 100, 2)
 print("R2 Score for XGBoost Model : ", R2_Score_dtr,"%")
+
+# Evaluate the model on the testing data
+accuracy = model.score(X_test, y_test)
+print(f"Accuracy: {accuracy:.3f}")

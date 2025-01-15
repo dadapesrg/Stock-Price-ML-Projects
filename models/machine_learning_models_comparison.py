@@ -53,12 +53,14 @@ def build_train_random_forest_model(X_train, y_train, n_estimators=100, min_samp
     rf.fit(X_train, y_train)
     return rf
 
+# Build and train the decision tree model
 def build_train_decision_tree_model(X_train_ml, y_train_ml, max_depth=15):
     from sklearn.tree import DecisionTreeRegressor
     dt = DecisionTreeRegressor(max_depth=max_depth)
     dt.fit(X_train_ml, y_train_ml)
     return dt
 
+# Build and train the gradient boosting model   
 def build_train_gradient_boosting_model(X_train_ml, y_train_ml, rando_state=42):
     from sklearn.ensemble import GradientBoostingRegressor
     gb = GradientBoostingRegressor(random_state=rando_state)
@@ -73,13 +75,32 @@ def build_train_xgboost_model(X_train, y_train, n_estimators=100, max_depth=7, l
     model.fit(X_train, y_train)
     return model
 
+# Build and train the AdaBoost model
+def build_train_ada_boost_model(X_train, y_train, n_estimators=200, learning_rate=0.1):
+    from sklearn.ensemble import AdaBoostRegressor
+    ada = AdaBoostRegressor(n_estimators=n_estimators, learning_rate=learning_rate)
+    ada.fit(X_train, y_train)
+    return ada
+
+# Build and train the linear regression model
+def build_train_linear_regression_model(X_train, y_train):
+    from sklearn.linear_model import LinearRegression
+    lr = LinearRegression()
+    lr.fit(X_train, y_train)
+    return lr
+    
+
+
 table_column_index = 3  # Index of the 'close' price column as the target
 
+# Train the models
 models = {
     'RF': build_train_random_forest_model(X_train, y_train), 
     "GB": build_train_gradient_boosting_model(X_train, y_train), 
     'XGB': build_train_xgboost_model(X_train, y_train), 
-    'DT': build_train_decision_tree_model(X_train, y_train)
+    'DT': build_train_decision_tree_model(X_train, y_train),
+    'ADA': build_train_ada_boost_model(X_train, y_train),
+    'LR': build_train_linear_regression_model(X_train, y_train) # Linear Regression
 }
 
 rmse_scores = dict()
@@ -116,12 +137,13 @@ plt.title('Models')
 plt.show()
 
 # Visualize the predictions
-fig, axes = plt.subplots(2, 2, sharex=True, sharey=True,figsize=(22,12))
+fig, axes = plt.subplots(3, 2, sharex=True, sharey=True,figsize=(22,12))
 fig.suptitle('Stock Price Predictions')
 fig.supxlabel('Time')
 fig.supylabel('Stock Price')
 ax1, ax2 = axes[0]
 ax3, ax4 = axes[1]
+ax5, ax6 = axes[2]
 
 # Invert the transformation 
 y_test = invert_transform(y_test, len(df.columns), table_column_index, scaler)
@@ -134,23 +156,33 @@ def add_plot(x,y):
             ax2.plot(y[i], label=x[i])               
         elif x[i] == 'GB':
             ax3.plot(y[i], label=x[i])
-        else:
+        elif x[i] == 'DT':
             ax4.plot(y[i], label=x[i])
+        elif x[i] == 'ADA':
+            ax5.plot(y[i], label=x[i])
+        else:
+            ax6.plot(y[i], label=x[i])
 
     ax1.plot(y_test, label='Actual Stock Price')    
     ax2.plot(y_test, label='Actual Stock Price')   
     ax3.plot(y_test, label='Actual Stock Price')      
     ax4.plot(y_test, label='Actual Stock Price')
+    ax5.plot(y_test, label='Actual Stock Price')
+    ax6.plot(y_test, label='Actual Stock Price')
     
     ax1.legend(loc='best')
     ax2.legend(loc='best')
     ax3.legend(loc='best')
     ax4.legend(loc='best')  
+    ax5.legend(loc='best')
+    ax6.legend(loc='best')
 
     ax1.set_title('Random Forest Predictions')
     ax2.set_title('Extreme Gradient Boosting Predictions')
     ax3.set_title('Gradient Boosting Predictions')
-    ax4.set_title('Decision Tree Predictions')    
+    ax4.set_title('Decision Tree Predictions')  
+    ax5.set_title('Ada Boost Predictions')  
+    ax6.set_title('Linear Regression Predictions')
    
 add_plot(list(predictions.keys()), list(predictions.values()))  
 
