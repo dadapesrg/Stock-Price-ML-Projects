@@ -9,7 +9,9 @@ The stock price prediction project aims to develop different machine learning mo
     e. Random Forest model \
     f. Extreme Gradient Boost model with hyperparameters tuning \ 
     g. Gradient Boosting model \
-    h. Random Forest model
+    h. Random Forest model \
+    i. Ada Boost model \
+    j. Linear Regression model \
 3. Data: Location of the SQLite database where the stock data is stored.
 4. Results: Location of stored trained models for prediction.
 5. Tests: Location for the test cases for the project.
