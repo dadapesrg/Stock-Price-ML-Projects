@@ -18,6 +18,12 @@ df_data = read_database_data(DATABASE_URL, "stock_prices")
 # Convert the data to a time series format
 df = pd.DataFrame(df_data).set_index("Date")
 
+#Check the first few rows of the data
+print(df.head())
+
+# Check the data types and missing values
+print(df.info())
+
 # Visualize the close price target data
 plt.plot(df.index, df["Close"], label="Time Series Data for Stock Price Close Selected as Target")
 plt.legend()
